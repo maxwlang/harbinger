@@ -1,7 +1,5 @@
 dist/**
 node_modules/**
 
-!src/feeds/the-handbasket.feed.ts
-src/feeds
-
 harbinger.db
+.envrc

@@ -51,7 +51,10 @@ class Feed {
                 `[Feed][${this.id}] Hash ${hash}, previously ${prevHash}`
             )
 
-            if (hash === prevHash) return
+            if (hash === prevHash) {
+                console.log(`[Feed][${this.id}] No change in feed`)
+                return
+            }
             await this.feedRepository.saveHash(this.id, hash)
 
             // Check if we should ignore the feed
