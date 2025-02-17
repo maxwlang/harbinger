@@ -41,6 +41,7 @@ const getFeedConfigs = async (): Promise<FeedConfig[]> => {
             }
 
             feedConfigs.push(feedConfig)
+            console.log(`[Loader][${feedConfig.id}] Loaded feed`)
         } catch (e) {
             console.error(`[Loader] Failed to load feed ${file}`, e)
         }
