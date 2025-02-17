@@ -9,7 +9,7 @@ const feed: FeedConfig = {
     id: 'the-handbasket',
     feed: 'https://rss.beehiiv.com/feeds/40ZQ7CSldT.xml',
     webhook,
-    interval: 1 * 60 * 60, // 1 hour
+    interval: 0.5 * 60 * 60, // 30 minutes
     embedFactory: async ({ cheerio, hash }): Promise<EmbedBuilder> => {
         const publisherName = cheerio('rss > channel > title').text()
         const publisherDescription = cheerio(
@@ -40,13 +40,16 @@ const feed: FeedConfig = {
             })
     },
     hashFactory: async ({ cheerio }): Promise<string> => {
-        const title = cheerio('rss > channel > title').text()
-        const description = cheerio('rss > channel > description').text()
-        const weekTitle = cheerio('rss > channel > item > title').text()
-        const billsText = cheerio('rss > channel > item > description').text()
+        const article = cheerio('rss > channel > item').first()
+        const articleTitle = article.find('title').text()
+        const articleDescription = article.find('description').text()
+        const articleImage = article.find('enclosure').attr('url')
+        const articleUrl = article.find('link').text()
 
         return createHash('md5')
-            .update(`${title}${description}${weekTitle}${billsText}`)
+            .update(
+                `${articleTitle}${articleDescription}${articleImage}${articleUrl}`
+            )
             .digest('hex')
     }
 }
