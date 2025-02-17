@@ -3,6 +3,7 @@ import Feed from './Feed'
 import { FeedConfig } from './types'
 import { setupDatabase } from './database'
 import startRepl from './repl'
+import { FeedRepository, SQLiteFeedRepository } from './FeedRepository'
 
 const getFeedConfigs = async (): Promise<FeedConfig[]> => {
     const disabledFeeds = process.env.DISABLED_FEEDS
@@ -47,10 +48,13 @@ const getFeedConfigs = async (): Promise<FeedConfig[]> => {
     return feedConfigs
 }
 
-const initializeFeeds = async (feedConfigs: FeedConfig[]): Promise<Feed[]> => {
+const initializeFeeds = async (
+    feedConfigs: FeedConfig[],
+    feedRepository: FeedRepository
+): Promise<Feed[]> => {
     const feeds: Feed[] = []
     for (const feedConfig of feedConfigs) {
-        const feed = new Feed(feedConfig)
+        const feed = new Feed(feedConfig, feedRepository)
         await feed.monitor()
         feeds.push(feed)
     }
@@ -59,8 +63,9 @@ const initializeFeeds = async (feedConfigs: FeedConfig[]): Promise<Feed[]> => {
 
 ;(async (): Promise<void> => {
     const db = await setupDatabase()
+    const feedRepository = new SQLiteFeedRepository(db)
     const feedConfigs = await getFeedConfigs()
-    const feeds = await initializeFeeds(feedConfigs)
+    const feeds = await initializeFeeds(feedConfigs, feedRepository)
 
-    await startRepl(feeds, db)
+    await startRepl(feeds, db, feedRepository)
 })()

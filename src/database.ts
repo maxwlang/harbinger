@@ -10,22 +10,18 @@ export const setupDatabase = async (): Promise<Database> =>
             console.log('[Database] Connected to SQLite database.')
         })
 
-        db.serialize(() => {
-            db.run(
-                'CREATE TABLE IF NOT EXISTS feed_states (id TEXT PRIMARY KEY, hash TEXT, last_updated INTEGER)',
-                err => {
-                    if (err) {
-                        console.error(
-                            '[Database] Error creating feeds table:',
-                            err.message
-                        )
-                        return
-                    }
-                    console.log(
-                        '[Database] Feeds table created or already exists.'
+        db.run(
+            'CREATE TABLE IF NOT EXISTS feed_states (feedId TEXT PRIMARY KEY, hash TEXT, last_updated INTEGER)',
+            err => {
+                if (err) {
+                    console.error(
+                        '[Database] Error creating feeds table:',
+                        err.message
                     )
-                    resolve(db)
+                    return
                 }
-            )
-        })
+                console.log('[Database] Feeds table created or already exists.')
+                resolve(db)
+            }
+        )
     })

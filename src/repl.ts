@@ -1,8 +1,13 @@
 import { Database } from 'sqlite3'
 import Feed from './Feed'
 import repl from 'repl'
+import { FeedRepository } from './FeedRepository'
 
-const startRepl = (feeds: Feed[], db: Database): void => {
+const startRepl = (
+    feeds: Feed[],
+    db: Database,
+    feedRepository: FeedRepository
+): void => {
     console.log('Welcome to Harbinger. Type .help for a list of commands.')
     const loop = repl.start({
         prompt: '> ',
@@ -58,7 +63,7 @@ const startRepl = (feeds: Feed[], db: Database): void => {
             try {
                 const feedConfig = (await import(`./feeds/${id}.feed.js`))
                     .default
-                const feed = new Feed(feedConfig)
+                const feed = new Feed(feedConfig, feedRepository)
                 feeds.push(feed)
                 console.log(`Added feed "${id}"`)
             } catch (e) {
@@ -109,6 +114,25 @@ const startRepl = (feeds: Feed[], db: Database): void => {
                     return
                 }
                 console.log('Cleared database')
+            })
+        }
+    })
+
+    loop.defineCommand('get-hash', {
+        help: 'Get the hash of a feed id',
+        action: async (id: string) => {
+            feedRepository.getLastHash(id).then(hash => {
+                console.log(hash)
+            })
+        }
+    })
+
+    loop.defineCommand('set-hash', {
+        help: 'Set the hash of a feed id',
+        action: async arg => {
+            const [id, hash] = arg.split(' ')
+            feedRepository.saveHash(id, hash).then(() => {
+                console.log('done')
             })
         }
     })

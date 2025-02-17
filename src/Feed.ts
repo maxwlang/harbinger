@@ -2,9 +2,10 @@ import { EmbedBuilder, WebhookClient } from 'discord.js'
 import { FeedConfig } from './types'
 import { CheerioAPI } from 'cheerio'
 import * as cheerioParser from 'cheerio'
+import { FeedRepository } from './FeedRepository'
 
 class Feed {
-    constructor(feedConfig: FeedConfig) {
+    constructor(feedConfig: FeedConfig, feedRepository: FeedRepository) {
         this.id = feedConfig.id
         this.feed = feedConfig.feed
         this.webhook = feedConfig.webhook
@@ -16,6 +17,7 @@ class Feed {
         this._hashFactory = feedConfig.hashFactory
         this._messageFactory = feedConfig.messageFactory
         this._ignoreFactory = feedConfig.ignoreFactory
+        this.feedRepository = feedRepository
 
         this.webhookClient = new WebhookClient({ url: this.webhook })
     }
@@ -26,11 +28,11 @@ class Feed {
     public interval: number
     public username: string
     public avatarURL: string
-    private hash: string | null = null
     private _embedFactory: FeedConfig['embedFactory']
     private _hashFactory: FeedConfig['hashFactory']
     private _messageFactory: FeedConfig['messageFactory']
     private _ignoreFactory: FeedConfig['ignoreFactory']
+    private feedRepository: FeedRepository
     private webhookClient: WebhookClient
     private timer: NodeJS.Timeout | null = null
 
@@ -44,13 +46,13 @@ class Feed {
 
             const cheerio = cheerioParser.load(content, { xml: true })
             const hash = await this.hashFactory({ content, cheerio })
+            const prevHash = await this.feedRepository.getLastHash(this.id)
             console.log(
-                `[Feed][${this.id}] Hash ${hash}, previously ${this.hash}`
+                `[Feed][${this.id}] Hash ${hash}, previously ${prevHash}`
             )
 
-            if (hash === this.hash) return
-            const prevHash = this.hash
-            this.hash = hash
+            if (hash === prevHash) return
+            await this.feedRepository.saveHash(this.id, hash)
 
             // Check if we should ignore the feed
             const ignore = await this.ignoreFactory({
