@@ -12,7 +12,6 @@ class Feed {
         this.username = feedConfig.username || 'Harbinger'
         this.avatarURL =
             feedConfig.avatarURL || 'https://i.imgur.com/AfFp7pu.png'
-        this.feedDisabled = feedConfig.disabled || false
         this._embedFactory = feedConfig.embedFactory
         this._hashFactory = feedConfig.hashFactory
         this._messageFactory = feedConfig.messageFactory
@@ -28,7 +27,6 @@ class Feed {
     public username: string
     public avatarURL: string
     private hash: string | null = null
-    private feedDisabled: boolean
     private _embedFactory: FeedConfig['embedFactory']
     private _hashFactory: FeedConfig['hashFactory']
     private _messageFactory: FeedConfig['messageFactory']
@@ -39,16 +37,16 @@ class Feed {
     public async process(): Promise<void> {
         try {
             // Get content and hash
-            console.log(`[${this.id}] Checking feed`)
+            console.log(`[Feed][${this.id}] Checking feed`)
             const response = await fetch(this.feed)
             const content = await response.text()
-            console.log(`[${this.id}] Feed fetched`)
-
-            console.log(content)
+            console.log(`[Feed][${this.id}] Feed fetched`)
 
             const cheerio = cheerioParser.load(content, { xml: true })
             const hash = await this.hashFactory({ content, cheerio })
-            console.log(`[${this.id}] Hash ${hash}, previously ${this.hash}`)
+            console.log(
+                `[Feed][${this.id}] Hash ${hash}, previously ${this.hash}`
+            )
 
             if (hash === this.hash) return
             const prevHash = this.hash
@@ -62,7 +60,7 @@ class Feed {
                 prevHash
             })
             if (ignore) {
-                console.log(`[${this.id}] Feed matches ignore criteria`)
+                console.log(`[Feed][${this.id}] Feed matches ignore criteria`)
                 return
             }
 
@@ -81,11 +79,9 @@ class Feed {
                 prevHash
             })
 
-            console.log({ message, embed, hash, prevHash })
-
             await this.sendWebhook(message, embed)
         } catch (error) {
-            console.error(`[${this.id}] Error processing feed: ${error}`)
+            console.error(`[Feed][${this.id}] Error processing feed: ${error}`)
             return
         }
     }
@@ -149,13 +145,15 @@ class Feed {
         message?: string,
         embeds?: EmbedBuilder | EmbedBuilder[]
     ): Promise<void> {
-        console.log(`[${this.id}] Sending webhook`)
+        console.log(`[Feed][${this.id}] Sending webhook`)
 
         if (
             !message &&
             (!embeds || (Array.isArray(embeds) && embeds.length === 0))
         ) {
-            console.error(`[${this.id}] No message or embed to send to webhook`)
+            console.error(
+                `[Feed][${this.id}] No message or embed to send to webhook`
+            )
             return
         }
 
@@ -173,9 +171,8 @@ class Feed {
      */
     public async monitor(): Promise<void> {
         if (this.timer) return
-        if (this.feedDisabled) return
 
-        console.log(`[${this.id}] Starting monitor`)
+        console.log(`[Feed][${this.id}] Starting monitor`)
         await this.process()
         this.timer = setInterval(
             async () => await this.process(),
@@ -190,7 +187,7 @@ class Feed {
         if (!this.timer) return
         clearInterval(this.timer)
         this.timer = null
-        console.log(`[${this.id}] Stopped monitoring`)
+        console.log(`[Feed][${this.id}] Stopped monitoring`)
     }
 }
 

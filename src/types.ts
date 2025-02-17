@@ -8,11 +8,6 @@ export interface FeedConfig {
     id: string
 
     /**
-     * If the feed is disabled
-     */
-    disabled?: boolean
-
-    /**
      * The feed to check.
      */
     feed: string
