@@ -1,8 +1,11 @@
 import sqlite3, { Database } from 'sqlite3'
+import fs from 'fs/promises'
 
 export const setupDatabase = async (): Promise<Database> =>
     new Promise(resolve => {
-        const db = new sqlite3.Database('./harbinger.db', err => {
+        fs.mkdir('./data', { recursive: true }).catch(console.error)
+
+        const db = new sqlite3.Database('./data/harbinger.db', err => {
             if (err) {
                 console.error('[Database] Error opening database:', err.message)
                 return
