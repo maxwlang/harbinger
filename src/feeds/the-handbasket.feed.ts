@@ -42,14 +42,10 @@ const feed: FeedConfig = {
     hashFactory: async ({ cheerio }): Promise<string> => {
         const article = cheerio('rss > channel > item').first()
         const articleTitle = article.find('title').text()
-        const articleDescription = article.find('description').text()
-        const articleImage = article.find('enclosure').attr('url')
         const articleUrl = article.find('link').text()
 
         return createHash('md5')
-            .update(
-                `${articleTitle}${articleDescription}${articleImage}${articleUrl}`
-            )
+            .update(`${articleTitle}${articleUrl}`)
             .digest('hex')
     }
 }
